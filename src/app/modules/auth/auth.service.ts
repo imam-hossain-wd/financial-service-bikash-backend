@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import {  ILogInUser, IUser } from './auth.interface';
@@ -16,15 +17,16 @@ const insertIntoDB = async (user: IUser): Promise<IUser | null> => {
 
 const logInUser = async (loginData:ILogInUser) => {
 
-  console.log(loginData, 'loginData');
   const isUserExist = await User.isUserExist(loginData?.number);
+  //@ts-ignore
   const isPinExist = await User.isPinMatched(loginData?.pin, isUserExist?.pin)
 
   if (!isUserExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'user does not exist');
   }
-
+ 
   if (
+    //@ts-ignore
     isUserExist?.pin &&
     !isPinExist
   ) {
@@ -50,10 +52,6 @@ const logInUser = async (loginData:ILogInUser) => {
   };
 
 }
-
-
-
-
 
 export const AuthService = {
   insertIntoDB,
