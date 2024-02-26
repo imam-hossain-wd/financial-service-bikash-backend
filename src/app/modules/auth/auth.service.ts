@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
-import {  AccountType, ILogInUser, IUser } from './auth.interface';
+import {  AccountType, ILogInAuth, IAuth } from './auth.interface';
 import { Session, User } from './auth.model';
 import { jwtHelpers } from '../../../helpers/jwtHelper';
 import config from '../../../config';
@@ -9,7 +9,7 @@ import { Secret } from 'jsonwebtoken';
 
 
 
-const insertIntoDB = async (user: IUser): Promise<IUser | null> => {
+const insertIntoDB = async (user: IAuth): Promise<IAuth | null> => {
  // @ts-ignore
   const isUserExist = await User.isUserExist(user?.number);
   if(isUserExist){
@@ -40,7 +40,7 @@ const insertIntoDB = async (user: IUser): Promise<IUser | null> => {
 };
 
 
-const logInUser = async (loginData:ILogInUser) => {
+const logInUser = async (loginData:ILogInAuth) => {
   const deviceId = loginData?.deviceId;
  // @ts-ignore
   const isUserExist = await User.isUserExist(loginData?.number);

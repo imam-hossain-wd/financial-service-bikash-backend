@@ -34,7 +34,7 @@ export type ISession ={
   createdAt: Date;
 }
 
-export type ILogInUser = {
+export type ILogInAuth = {
   number: number;
   deviceId:string;
   email:string;
