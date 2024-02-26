@@ -5,6 +5,12 @@ import { Model } from "mongoose";
 export enum AccountType {
   AGENT = 'agent',
   USER = 'user',
+  ADMIN = 'admin'
+}
+
+export enum AccountStatus {
+  COMPLETE = 'complete',
+  PENDING = 'pending'
 }
 
 export type IUser = {
@@ -14,11 +20,23 @@ export type IUser = {
   number: number;
   email: string;
   account_type?: AccountType;
+  status?:AccountStatus;
   nid: number;
+  balance?: string;
+  deviceId :string
 };
 
+// session type
+export type ISession ={
+  userId: string;
+  deviceId: string;
+  sessionToken: string;
+  createdAt: Date;
+}
+
 export type ILogInUser = {
-  number: string;
+  number: number;
+  deviceId:string;
   email:string;
   pin:string
 }

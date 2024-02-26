@@ -28,6 +28,9 @@ const loginUserZodSchema = z.object({
     number: z.number({
       required_error: 'number is required',
     }),
+    deviceId: z.string({
+      required_error: 'deviceId is required',
+    }),
     pin: z.string({
       required_error: 'pin is required',
     })

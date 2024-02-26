@@ -1,18 +1,29 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 import { Schema, model } from 'mongoose';
-import { IUser, UserModel } from './auth.interface';
+import { AccountStatus, AccountType, ISession, IUser, UserModel } from './auth.interface';
 import bcrypt from 'bcrypt';
 import config from '../../../config';
-
 
 const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
   pin: { type: String, required: true },
   number: { type: Number, required: true },
   email: { type: String, required: true },
-  account_type: { type: String, enum: ['agent', 'user'], default: 'user' },
+  balance: { type: Number, default: 0 },
+  deviceId: { type: String, required: true },
+  account_type: { type: String, enum: [AccountType.AGENT, AccountType.USER], default: AccountType.USER },
   nid: { type: Number, required: true },
+  status: { type: String, enum: [AccountStatus.COMPLETE, AccountStatus.PENDING], default: AccountStatus.COMPLETE },
 });
+
+const SessionSchema: Schema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  deviceId: { type: String, required: true },
+  sessionToken: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now, expires: '7d' }
+});
+
+export const Session = model<ISession>('Session', SessionSchema);
 
 
 // Pre-save Hook: pin hashing before save
@@ -31,7 +42,7 @@ UserSchema.pre('save', async function (next) {
 
 //check user exit  Static Method
 UserSchema.statics.isUserExist = async function (
-  number: string
+  number: number
 ): Promise<IUser | null> {
   return await User.findOne(
     { number },

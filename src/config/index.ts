@@ -12,7 +12,9 @@ export default {
   jwt: {
     secret: process.env.JWT_SECRET,
     refresh_secret: process.env.JWT_REFRESH_SECRET,
+    session_secret: process.env.JWT_SESSION_SECRET,
     expires_in: process.env.JWT_EXPIRES_IN,
     refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
+    session_expires_in: process.env.JWT_SESSION_EXPIRES_IN,
   },
-};
+};  
