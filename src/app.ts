@@ -3,6 +3,7 @@ import express, { Application, NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
 import cookieParser from 'cookie-parser';
 import router from './app/routes';
+import globalErrorHandler from './app/middlewares/globalErrorHandler';
 
 const app: Application = express();
 
@@ -16,6 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1', router)
 
 //global error handler
+
+app.use(globalErrorHandler)
 
 //server root page
 app.use((req: Request, res: Response, next: NextFunction) => {
