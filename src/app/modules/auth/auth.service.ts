@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
-import {  AccountType, ILogInAuth, IAuth } from './auth.interface';
+import {  AccountType, ILogInAuth, IUser } from './auth.interface';
 import { Session, User } from './auth.model';
 import { jwtHelpers } from '../../../helpers/jwtHelper';
 import config from '../../../config';
@@ -9,7 +9,7 @@ import { Secret } from 'jsonwebtoken';
 
 
 
-const insertIntoDB = async (user: IAuth): Promise<IAuth | null> => {
+const insertIntoDB = async (user: IUser): Promise<IUser | null> => {
  // @ts-ignore
   const isUserExist = await User.isUserExist(user?.number);
   if(isUserExist){
@@ -26,12 +26,12 @@ const insertIntoDB = async (user: IAuth): Promise<IAuth | null> => {
     // @ts-ignore
     createdUser.balance  = 40;
     // @ts-ignore
-    createdUser.status = 'complete';
+    createdUser.account_status = 'complete';
   } else if (createdUser.account_type === AccountType.AGENT) {
     // @ts-ignore
     createdUser.balance = 100000;
     // @ts-ignore
-    createdUser.status = 'pending';
+    createdUser.account_status = 'pending';
   }
 
   createdUser = await createdUser.save();

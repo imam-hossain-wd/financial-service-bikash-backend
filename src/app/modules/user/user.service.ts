@@ -1,15 +1,43 @@
-import { IUser } from "../auth/auth.interface";
-import { User } from "../auth/auth.model";
+/* eslint-disable prefer-const */
+import { IFilters, IUser } from '../auth/auth.interface';
+import { User } from '../auth/auth.model';
+import { userSearchAbleFields } from './user.constrants';
 
 
-const getAllUsers = async (): Promise<IUser[] | null> => {
-    const users = await User.find();
-    return users;
+const getAllUsers = async (filters:IFilters): Promise<IUser[] | null> => {
+    const { searchTerm, ...filtersData } = filters;
+    const status= filtersData.status;
+
+    const andConditions = [];
+
+    if (searchTerm) {
+        const orConditions = userSearchAbleFields.map((field) => {
+    
+            return {
+                [field]: {
+                    $regex: searchTerm,
+                    $options: 'i',
+                },
+            };
+        });
+
+        andConditions.push({ $or: orConditions });
+    }
+
+    if (status) {
+        andConditions.push({ account_status: status});
+      }
+
+      const whereConditions =
+  andConditions.length > 0 ? { $and: andConditions } : {};
+
+  const result = await User.find(whereConditions)
+return result;
+
 };
 
 
 
 export const UserService = {
-    getAllUsers
-}
-  
+  getAllUsers,
+};

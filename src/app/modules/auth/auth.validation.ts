@@ -11,7 +11,7 @@ const createUserZodSchema = z.object({
     pin: z.string({
       required_error: 'pin is required',
     }),
-    number: z.number({
+    number: z.string({
       required_error: 'number is required',
     }),
     account_type: z.string({

@@ -10,17 +10,18 @@ export enum AccountType {
 
 export enum AccountStatus {
   COMPLETE = 'complete',
-  PENDING = 'pending'
+  PENDING = 'pending',
+  BLOCK = 'block'
 }
 
 export type IUser = {
   _id?: string;
   name: string;
   pin: string; 
-  number: number;
+  number: string;
   email: string;
   account_type?: AccountType;
-  status?:AccountStatus;
+  account_status?:AccountStatus;
   nid: number;
   balance?: string;
   deviceId :string
@@ -39,6 +40,11 @@ export type ILogInAuth = {
   deviceId:string;
   email:string;
   pin:string
+}
+
+export type IFilters = {
+  searchTerm:string;
+  status:string
 }
 
 export type UserModel = {

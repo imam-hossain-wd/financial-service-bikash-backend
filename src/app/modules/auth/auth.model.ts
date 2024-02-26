@@ -7,13 +7,13 @@ import config from '../../../config';
 const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
   pin: { type: String, required: true },
-  number: { type: Number, required: true },
+  number: { type: String, required: true },
   email: { type: String, required: true },
   balance: { type: Number, default: 0 },
   deviceId: { type: String, required: true },
   account_type: { type: String, enum: [AccountType.AGENT, AccountType.USER], default: AccountType.USER },
   nid: { type: Number, required: true },
-  status: { type: String, enum: [AccountStatus.COMPLETE, AccountStatus.PENDING], default: AccountStatus.COMPLETE },
+  account_status: { type: String, enum: [AccountStatus.COMPLETE, AccountStatus.PENDING,AccountStatus.BLOCK] },
 });
 
 const SessionSchema: Schema = new Schema({
