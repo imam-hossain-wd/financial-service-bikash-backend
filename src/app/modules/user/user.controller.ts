@@ -25,6 +25,31 @@ const getAllUsers:RequestHandler = catchAsync(async (req, res) => {
   });
 
 
+  const updateUser: RequestHandler = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const updatedProduct = await UserService.updateUser(id, req.body);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message:"Update User successfully",
+      data: updatedProduct,
+    });
+  });
+  
+  const deleteUser: RequestHandler = catchAsync(async (req, res) => {
+    const { id } = req.params;
+   const result =  await UserService.deleteUser(id);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message:"Delete User Successful",
+      data: result
+    });
+  });
+
+
   export const UserController= {
-    getAllUsers
+    getAllUsers,
+    updateUser,
+    deleteUser
   }
