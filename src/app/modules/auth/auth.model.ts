@@ -11,6 +11,6 @@ const UserSchema: Schema = new Schema({
   nid: { type: Number, required: true },
 });
 
-const UserModel = mongoose.model<IUser>('User', UserSchema);
+const User = mongoose.model<IUser>('User', UserSchema);
 
-export default UserModel;
+export default User;
