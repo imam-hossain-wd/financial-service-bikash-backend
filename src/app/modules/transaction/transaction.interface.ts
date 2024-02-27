@@ -20,3 +20,10 @@ export type ICashOut = {
     agentId:string;
     amount:number
 }
+
+export type ICashIn = {
+    userId:string,
+     agentId:string, 
+     amount:number, 
+     agentPIN:string
+}

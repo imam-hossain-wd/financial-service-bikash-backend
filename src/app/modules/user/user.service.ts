@@ -65,7 +65,7 @@ const getBalance = async (
         income:user?.income
       }
   
-      console.log(result, 'get balance');
+     return result;
 
   };
 

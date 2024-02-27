@@ -7,18 +7,11 @@
 import { User } from '../auth/auth.model';
 import ApiError from '../../../errors/ApiError';
 import httpStatus from 'http-status';
-import { ICashOut, ISendMonery, ITransaction } from './transaction.interface';
+import { ICashIn, ICashOut, ISendMonery, ITransaction } from './transaction.interface';
 import { Transaction } from './transaction.model';
 import { AccountStatus } from '../auth/auth.interface';
 
-// }
-// const cashIn = async()=> {
 
-// }
-
-// const balanceInquiry = async()=> {
-
-// }
 
 const sendMoney = async (
   sendMoneryData: ISendMonery
@@ -133,9 +126,11 @@ const cashOut = async (cashOutData: ICashOut): Promise<ITransaction | null> => {
     user.balance -= amount + cashOutFee;
     //@ts-ignore
     admin.balance += cashOutFee * 0.5;
+    //@ts-ignore
     admin.income += cashOutFee * 0.5;
     //@ts-ignore
     agent.balance += cashOutFee * 0.01;
+    //@ts-ignore
     agent.income += cashOutFee * 0.01;
 
     // Save the updated user, admin, and agent details
@@ -160,9 +155,69 @@ const cashOut = async (cashOutData: ICashOut): Promise<ITransaction | null> => {
 
 
 
+const cashIn = async (cashInData: ICashIn): Promise<ITransaction | null> => {
+
+    const { userId, agentId, amount, agentPIN } = cashInData;
+    try {
+
+      const user = await User.findById(userId);
+      const agent = await User.findOne({
+        _id: agentId,
+        account_type: 'agent',
+        authorized: true,
+      });
+
+      //@ts-ignore
+      const isPinExist = await User.isPinMatched(agentPIN, agent?.pin)
+
+      if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+      }
+  
+      if (!agent) {
+        throw new ApiError(httpStatus.NOT_FOUND, 'Agent not found or unauthorized');
+      }  
+      // Verify agent's PIN for security purposes
+      if (!isPinExist) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid agent PIN');
+      }
+
+        //@ts-ignore
+      if (agent?.balance < amount) {
+        throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'Insufficient balance');
+      }
+  
+
+      //@ts-ignore
+       user.balance = user.balance + amount;
+       //@ts-ignore
+       agent.balance= agent.balance - amount ;
+
+      await user.save();
+      await agent.save();
+      
+      const transaction = await Transaction.create({
+        userId,
+        agentId,
+        amount,
+        fee: 0,
+        type: 'cashIn',
+        status: 'completed',
+      });
+  
+  
+      return transaction;
+    } catch (error) {
+        //@ts-ignore
+      console.error('Cash-in failed:', error.message);
+      throw error;
+    }
+  };
+
+
+
 export const TransactionService = {
   sendMoney,
   cashOut,
-  // balanceInquiry,
-  // cashIn
+  cashIn
 };
