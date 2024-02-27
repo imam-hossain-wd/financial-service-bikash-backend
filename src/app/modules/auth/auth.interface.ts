@@ -20,6 +20,8 @@ export type IUser = {
   pin: string; 
   number: string;
   email: string;
+  income?:number;
+  authorized?:boolean;
   account_type?: AccountType;
   account_status?:AccountStatus;
   nid: number;

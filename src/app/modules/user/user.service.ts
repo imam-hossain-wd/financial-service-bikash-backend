@@ -1,7 +1,12 @@
 /* eslint-disable prefer-const */
+import { Secret } from 'jsonwebtoken';
+import config from '../../../config';
+import { jwtHelpers } from '../../../helpers/jwtHelper';
 import { IFilters, IUser } from '../auth/auth.interface';
 import { User } from '../auth/auth.model';
 import { userSearchAbleFields } from './user.constrants';
+import ApiError from '../../../errors/ApiError';
+import httpStatus from 'http-status';
 
 const getAllUsers = async (filters: IFilters): Promise<IUser[] | null> => {
   const { searchTerm, ...filtersData } = filters;
@@ -45,8 +50,28 @@ const deleteUser = async (id: string) => {
   return result;
 };
 
+const getBalance = async (
+  token:string ) => {
+
+      const {_id:userId} = jwtHelpers.verifyToken(token, config.jwt.secret as Secret)
+      const user = await User.findById(userId);  
+
+      if (!user) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, 'Forbidden');
+      }
+
+      const result = {
+        balance:user.balance,
+        income:user?.income
+      }
+  
+      console.log(result, 'get balance');
+
+  };
+
 export const UserService = {
   getAllUsers,
   updateUser,
-  deleteUser
+  deleteUser,
+  getBalance
 };

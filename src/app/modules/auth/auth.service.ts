@@ -24,6 +24,8 @@ const insertIntoDB = async (user: IUser): Promise<IUser | null> => {
 
   if (createdUser.account_type === AccountType.USER) {
     // @ts-ignore
+    createdUser.authorized = true;
+    // @ts-ignore
     createdUser.balance  = 40;
     // @ts-ignore
     createdUser.account_status = 'complete';
@@ -35,7 +37,6 @@ const insertIntoDB = async (user: IUser): Promise<IUser | null> => {
   }
 
   createdUser = await createdUser.save();
-
   return createdUser;
 };
 

@@ -47,9 +47,22 @@ const getAllUsers:RequestHandler = catchAsync(async (req, res) => {
     });
   });
 
+  const getBalance: RequestHandler = catchAsync(async (req, res) => {
+    const token = req.headers.authorization as string;
+
+    const result = await UserService.getBalance(token);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message:"Balance Retrived successfully",
+      data: result,
+    });
+  });
+
 
   export const UserController= {
     getAllUsers,
     updateUser,
-    deleteUser
+    deleteUser,
+    getBalance
   }

@@ -10,6 +10,8 @@ const UserSchema: Schema = new Schema({
   number: { type: String, required: true },
   email: { type: String, required: true },
   balance: { type: Number, default: 0 },
+  income: { type: Number, default: 0 },
+  authorized: { type: Boolean, default:false },
   deviceId: { type: String, required: true },
   account_type: { type: String, enum: [AccountType.AGENT, AccountType.USER, AccountType.ADMIN], default: AccountType.USER },
   nid: { type: Number, required: true },

@@ -25,7 +25,7 @@ const createUserZodSchema = z.object({
 
 const loginUserZodSchema = z.object({
   body: z.object({
-    number: z.number({
+    number: z.string({
       required_error: 'number is required',
     }),
     deviceId: z.string({
