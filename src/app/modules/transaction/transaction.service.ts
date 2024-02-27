@@ -7,17 +7,16 @@
 import { User } from "../auth/auth.model";
 import ApiError from "../../../errors/ApiError";
 import httpStatus from "http-status";
-import { ISendMonery, ITransaction } from "./transaction.interface";
+import { ICashOut, ISendMonery, ITransaction } from "./transaction.interface";
 import { Transaction } from "./transaction.model";
+import { AccountStatus } from "../auth/auth.interface";
 
     
 // }
 // const cashIn = async()=> {
     
 // }
-// const cashOut = async()=> {
-    
-// }
+
 
 // const balanceInquiry = async()=> {
     
@@ -94,13 +93,75 @@ const sendMoney = async (sendMoneryData:ISendMonery): Promise<ITransaction | nul
 
 
 
+const cashOut = async (cashOutData: ICashOut): Promise<ITransaction | null> => {
+    const { userId,agentId,  amount } = cashOutData;
+
+    try {
+        // Find the user initiating the cash-out
+        const user = await User.findById(userId);
+        const admin = await User.findOne({ account_type: "admin" });
+        const agent = await User.findOne({ _id: agentId, account_status: AccountStatus.COMPLETE });
+
+        if (!admin) {
+            throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Admin not found');
+        }
+        if (!agent) {
+            throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Agent not found');
+        }
+
+        if (!user) {
+            throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+        }
+
+        // Validate the cash-out amount
+        const minAmount = 0;
+        if (amount <= minAmount) {
+            throw new ApiError(httpStatus.NOT_ACCEPTABLE, `Invalid cash-out amount`);
+        }
+
+        // Calculate the cash-out fee (1.5%)
+        const cashOutFee = amount * 0.015;
+
+        // Deduct the cash-out amount and fee from the user's balance
+        
+        // Update balances
+        //@ts-ignore
+        user.balance -= (amount + cashOutFee);
+        //@ts-ignore
+        admin.balance += (cashOutFee * 0.5); 
+        //@ts-ignore
+        agent.balance += (cashOutFee * 0.01);
+
+        // Save the updated user, admin, and agent details
+        await Promise.all([user.save(), admin.save(), agent.save()]);
+
+        // Create transaction record
+        const transaction = await Transaction.create({
+            userId,
+            amount: -amount,
+            fee: cashOutFee,
+            type: 'cashOut',
+            status: 'completed'
+        });
+
+        return transaction;
+
+    } catch (error) {
+        //@ts-ignore
+        console.error('Cash-out failed:', error.message);
+        throw error;
+    }
+};
+
+
+
 
 
 
 
 export const TransactionService= {
     sendMoney,
-    // cashOut,
+    cashOut,
     // balanceInquiry,
     // cashIn
 }

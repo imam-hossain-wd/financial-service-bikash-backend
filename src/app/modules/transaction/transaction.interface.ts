@@ -9,10 +9,14 @@ export type ITransaction = {
     status: string;
 }
 
-
-
 export type ISendMonery = {
     senderId: string, 
     receiverId: string,
      amount: number
+}
+
+export type ICashOut = {
+    userId:string;
+    agentId:string;
+    amount:number
 }
