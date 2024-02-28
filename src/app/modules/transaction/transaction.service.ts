@@ -2,37 +2,42 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-// const sendMoney = async()=> {
-
 import { User } from '../auth/auth.model';
 import ApiError from '../../../errors/ApiError';
 import httpStatus from 'http-status';
 import { ICashIn, ICashOut, ISendMonery, ITransaction } from './transaction.interface';
 import { Transaction } from './transaction.model';
 import { AccountStatus } from '../auth/auth.interface';
+import mongoose from 'mongoose';
 
 
 
 const sendMoney = async (
   sendMoneryData: ISendMonery
 ): Promise<ITransaction | null> => {
-  const { senderId, receiverId, amount } = sendMoneryData;
+  const { senderId, number, amount, pin } = sendMoneryData;
 
   try {
     const sender = await User.findById(senderId);
-    const receiver = await User.findById(receiverId);
+    const receiver = await User.findOne({number:number});
     const admin = await User.findOne({ account_type: 'admin' });
 
-    // console.log(admin, 'admin');
+    console.log(sender, 'sender');
 
     if (!sender) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Sender not found');
     }
     if (!receiver) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Receiver not found');
+      throw new ApiError(httpStatus.NOT_FOUND, 'This number has no Account');
+    }
+    //@ts-ignore
+    const isPinExist = await User.isPinMatched(pin, sender?.pin)
+
+      if (!isPinExist) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Wrong Pin');
     }
 
-    // Validate minimum amount and sender's balance
+    // // Validate minimum amount and sender's balance
     const minAmount = 50;
 
     if (amount < minAmount) {
@@ -59,8 +64,6 @@ const sendMoney = async (
     // Update sender's balance after deducting fees
     //@ts-ignore
     sender.balance -= transactionFee;
-
-    // Assume adminId is stored somewhere or fetched from a configuration
     //@ts-ignore
     admin.balance += transactionFee;
     //@ts-ignore
@@ -69,10 +72,9 @@ const sendMoney = async (
     // Save the updated sender, receiver, and admin details
     //@ts-ignore
     await Promise.all([sender.save(), receiver.save(), admin.save()]);
-
     const result = await Transaction.create({
-      sender: senderId,
-      receiver: receiverId,
+      sender: new mongoose.Types.ObjectId(senderId),
+      receiver: new mongoose.Types.ObjectId(receiver._id),
       amount,
       fee: transactionFee,
       type: 'sendMoney',

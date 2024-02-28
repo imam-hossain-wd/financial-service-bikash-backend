@@ -14,7 +14,7 @@ const UserSchema: Schema = new Schema({
   authorized: { type: Boolean, default:false },
   deviceId: { type: String, required: true },
   account_type: { type: String, enum: [AccountType.AGENT, AccountType.USER, AccountType.ADMIN], default: AccountType.USER },
-  nid: { type: Number, required: true },
+  nid: { type: Number, required: true , unique:true},
   account_status: { type: String, enum: [AccountStatus.COMPLETE, AccountStatus.PENDING,AccountStatus.BLOCK] },
 });
 

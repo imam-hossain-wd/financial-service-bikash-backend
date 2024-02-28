@@ -8,6 +8,7 @@ import httpStatus from "http-status";
 const sendMoney: RequestHandler = catchAsync(async (req, res) => {
     const sendMoneryData = req.body;
 
+
     const result = await TransactionService.sendMoney(sendMoneryData);
     sendResponse(res, {
       statusCode: httpStatus.OK,
