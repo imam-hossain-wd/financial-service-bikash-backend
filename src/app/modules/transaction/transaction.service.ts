@@ -5,24 +5,20 @@
 import { User } from '../auth/auth.model';
 import ApiError from '../../../errors/ApiError';
 import httpStatus from 'http-status';
-import { ICashIn, ICashOut, ISendMonery, ITransaction } from './transaction.interface';
+import { ITransaction, ITransactionProps } from './transaction.interface';
 import { Transaction } from './transaction.model';
-import { AccountStatus } from '../auth/auth.interface';
 import mongoose from 'mongoose';
 
-
-
 const sendMoney = async (
-  sendMoneryData: ISendMonery
+  sendMoneryData: ITransactionProps
 ): Promise<ITransaction | null> => {
-  const { senderId, number, amount, pin } = sendMoneryData;
+  const { id: senderId, number, amount: sendAmount, pin } = sendMoneryData;
+  const amount = Number(sendAmount);
 
   try {
     const sender = await User.findById(senderId);
-    const receiver = await User.findOne({number:number});
+    const receiver = await User.findOne({ number: number });
     const admin = await User.findOne({ account_type: 'admin' });
-
-    console.log(sender, 'sender');
 
     if (!sender) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Sender not found');
@@ -31,13 +27,13 @@ const sendMoney = async (
       throw new ApiError(httpStatus.NOT_FOUND, 'This number has no Account');
     }
     //@ts-ignore
-    const isPinExist = await User.isPinMatched(pin, sender?.pin)
+    const isPinExist = await User.isPinMatched(pin, sender?.pin);
 
-      if (!isPinExist) {
+    if (!isPinExist) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Wrong Pin');
     }
 
-    // // Validate minimum amount and sender's balance
+    // Validate minimum amount and sender's balance
     const minAmount = 50;
 
     if (amount < minAmount) {
@@ -78,7 +74,7 @@ const sendMoney = async (
       amount,
       fee: transactionFee,
       type: 'sendMoney',
-      status: 'completed',
+      status: 'success',
     });
 
     return result;
@@ -89,27 +85,37 @@ const sendMoney = async (
   }
 };
 
-const cashOut = async (cashOutData: ICashOut): Promise<ITransaction | null> => {
-  const { userId, agentId, amount } = cashOutData;
+const cashOut = async (
+  cashOutData: ITransactionProps
+): Promise<ITransaction | null> => {
+  const { id: senderId, number, amount: sendAmount, pin } = cashOutData;
+
+  const amount = Number(sendAmount);
 
   try {
     // Find the user initiating the cash-out
-    const user = await User.findById(userId);
+    const user = await User.findById(senderId);
     const admin = await User.findOne({ account_type: 'admin' });
     const agent = await User.findOne({
-      _id: agentId,
-      account_status: AccountStatus.COMPLETE,
+      number: number,
+      authorized: true,
     });
+    //@ts-ignore
+    const isPinExist = await User.isPinMatched(pin, user?.pin);
 
-    if (!admin) {
-      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Admin not found');
-    }
-    if (!agent) {
-      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Agent not found');
+    if (!isPinExist) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Wrong Pin');
     }
 
     if (!user) {
       throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    }
+
+    if (!admin) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Admin not found');
+    }
+    if (!agent) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Agent not found');
     }
 
     // Validate the cash-out amount
@@ -120,8 +126,6 @@ const cashOut = async (cashOutData: ICashOut): Promise<ITransaction | null> => {
 
     // Calculate the cash-out fee (1.5%)
     const cashOutFee = amount * 0.015;
-
-    // Deduct the cash-out amount and fee from the user's balance
 
     // Update balances
     //@ts-ignore
@@ -137,14 +141,14 @@ const cashOut = async (cashOutData: ICashOut): Promise<ITransaction | null> => {
 
     // Save the updated user, admin, and agent details
     await Promise.all([user.save(), admin.save(), agent.save()]);
-
     // Create transaction record
     const transaction = await Transaction.create({
-      userId,
+      sender: new mongoose.Types.ObjectId(senderId),
+      receiver: new mongoose.Types.ObjectId(agent._id),
       amount: -amount,
       fee: cashOutFee,
       type: 'cashOut',
-      status: 'completed',
+      status: 'success',
     });
 
     return transaction;
@@ -155,71 +159,74 @@ const cashOut = async (cashOutData: ICashOut): Promise<ITransaction | null> => {
   }
 };
 
+const cashIn = async (
+  cashInData: ITransactionProps
+): Promise<ITransaction | null> => {
+  const { number: userNumber, id: agentId, amount, pin: agentPin } = cashInData;
 
+  console.log(userNumber, agentId, amount,agentPin,"userNumber, agentId, amount,agentPin" );
+  try {
+    const user = await User.findOne({ number: userNumber });
+    const agent = await User.findOne({
+      _id: agentId,
+      account_type: 'agent',
+      authorized: true,
+    });
 
-const cashIn = async (cashInData: ICashIn): Promise<ITransaction | null> => {
+    //@ts-ignore
+    const isPinExist = await User.isPinMatched(agentPin, agent?.pin);
 
-    const { userId, agentId, amount, agentPIN } = cashInData;
-    try {
+    if (!user) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    }
 
-      const user = await User.findById(userId);
-      const agent = await User.findOne({
-        _id: agentId,
-        account_type: 'agent',
-        authorized: true,
-      });
+    if (!agent) {
+      throw new ApiError(
+        httpStatus.NOT_FOUND,
+        'Agent not found or unauthorized'
+      );
+    }
+    // Verify agent's PIN for security purposes
+    if (!isPinExist) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid agent PIN');
+    }
 
+    if (agent) {
       //@ts-ignore
-      const isPinExist = await User.isPinMatched(agentPIN, agent?.pin)
-
-      if (!user) {
-        throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-      }
-  
-      if (!agent) {
-        throw new ApiError(httpStatus.NOT_FOUND, 'Agent not found or unauthorized');
-      }  
-      // Verify agent's PIN for security purposes
-      if (!isPinExist) {
-        throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid agent PIN');
-      }
-
-        //@ts-ignore
       if (agent?.balance < amount) {
         throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'Insufficient balance');
       }
-  
 
       //@ts-ignore
-       user.balance = user.balance + amount;
-       //@ts-ignore
-       agent.balance= agent.balance - amount ;
+      user.balance = user.balance + amount;
+      //@ts-ignore
+      agent.balance = agent.balance - amount;
 
       await user.save();
       await agent.save();
-      
+
+      // Create transaction record
       const transaction = await Transaction.create({
-        userId,
-        agentId,
-        amount,
+        sender: new mongoose.Types.ObjectId(agent._id),
+        receiver: new mongoose.Types.ObjectId(user._id),
+        amount: amount,
         fee: 0,
-        type: 'cashIn',
-        status: 'completed',
+        type: 'cashin',
+        status: 'success',
       });
-  
-  
       return transaction;
-    } catch (error) {
-        //@ts-ignore
-      console.error('Cash-in failed:', error.message);
-      throw error;
+    } else {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Only Agent Can Cashin');
     }
-  };
-
-
+  } catch (error) {
+    //@ts-ignore
+    console.error('Cash-in failed:', error.message);
+    throw error;
+  }
+};
 
 export const TransactionService = {
   sendMoney,
   cashOut,
-  cashIn
+  cashIn,
 };

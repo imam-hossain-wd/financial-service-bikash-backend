@@ -59,10 +59,23 @@ const getAllUsers:RequestHandler = catchAsync(async (req, res) => {
     });
   });
 
+  const getSingleUser: RequestHandler = catchAsync(async (req, res) => {
+   
+    const userId = req.params.id;
+    const result = await UserService.getSingleUser(userId);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message:"Retrived single user successfully",
+      data: result,
+    });
+  });
+
 
   export const UserController= {
     getAllUsers,
     updateUser,
     deleteUser,
-    getBalance
+    getBalance,
+    getSingleUser
   }

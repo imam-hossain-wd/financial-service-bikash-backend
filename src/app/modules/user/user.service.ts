@@ -69,9 +69,16 @@ const getBalance = async (
 
   };
 
+
+  const getSingleUser = async (id:string)=> {
+    const result = await User.findById(id)
+    return result;
+  }
+
 export const UserService = {
   getAllUsers,
   updateUser,
   deleteUser,
-  getBalance
+  getBalance,
+  getSingleUser
 };
