@@ -6,11 +6,11 @@ import { TransactionValidation } from "./transation.validation";
 
 const router = Router();
 
-router.post('/send-money', TransactionController.sendMoney);
+router.post('/send-money',validateRequest(TransactionValidation.SendMoneyZodSchema),TransactionController.sendMoney);
 
-router.post('/cash-out',validateRequest(TransactionValidation.cashoutZodSchema), TransactionController.userCashOut);
+router.post('/cash-out',validateRequest(TransactionValidation.CashoutZodSchema), TransactionController.userCashOut);
 
-router.post('/cash-in', TransactionController.cashIn);
+router.post('/cash-in',validateRequest(TransactionValidation.CashinZodSchema), TransactionController.cashIn);
 
 
 

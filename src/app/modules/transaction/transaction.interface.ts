@@ -1,7 +1,20 @@
-export type ITransaction = {
-  sender: string;
-  receiver: string;
-  amount: number;
+
+export type ICashin = {
+  userId: string;
+  agentId:string;
+  cashInNumber:number;
+  cashInAmount:number;
+  fee: number;
+  type: string;
+  status: string;
+};
+
+export type ISendMoney = {
+  userId: string;
+  reciverId: string;
+  senderNumber: string;
+  reciverNumber: number;
+  sendAmount:number;
   fee: number;
   type: string;
   status: string;
@@ -11,18 +24,10 @@ export type ICashout = {
   userId: string;
   agentId: string;
   amount: number;
-  cashoutNumber:number;
+  cashoutNumber: number;
   fee: number;
   type: string;
   status: string;
-};
-
-
-export type ITransactionProps = {
-  id: string;
-  number: string;
-  amount: string;
-  pin: string;
 };
 
 export type ICashOutProps = {
@@ -32,9 +37,16 @@ export type ICashOutProps = {
   userPin: string;
 };
 
-// export type ICashIn = {
-//   userId: string;
-//   agentId: string;
-//   amount: number;
-//   agentPIN: string;
-// };
+export type ISendMoneyProps = {
+  userId: string;
+  reciverNumber: string;
+  userPin: string;
+  amount: number;
+};
+
+export type ICashInProps = {
+  agentId: string;
+  userNumber: string;
+  agentPin: string;
+  amount: string;
+};
