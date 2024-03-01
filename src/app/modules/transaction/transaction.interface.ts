@@ -7,6 +7,17 @@ export type ITransaction = {
   status: string;
 };
 
+export type ICashout = {
+  userId: string;
+  agentId: string;
+  amount: number;
+  cashoutNumber:number;
+  fee: number;
+  type: string;
+  status: string;
+};
+
+
 export type ITransactionProps = {
   id: string;
   number: string;
@@ -14,11 +25,12 @@ export type ITransactionProps = {
   pin: string;
 };
 
-// export type ICashOut = {
-//   userId: string;
-//   agentId: string;
-//   amount: number;
-// };
+export type ICashOutProps = {
+  userId: string;
+  agentNumber: string;
+  amount: number;
+  userPin: string;
+};
 
 // export type ICashIn = {
 //   userId: string;

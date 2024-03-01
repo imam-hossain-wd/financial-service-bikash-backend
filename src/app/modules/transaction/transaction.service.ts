@@ -5,8 +5,13 @@
 import { User } from '../auth/auth.model';
 import ApiError from '../../../errors/ApiError';
 import httpStatus from 'http-status';
-import { ITransaction, ITransactionProps } from './transaction.interface';
-import { Transaction } from './transaction.model';
+import {
+  ICashOutProps,
+  ICashout,
+  ITransaction,
+  ITransactionProps,
+} from './transaction.interface';
+import { Cashout, Transaction } from './transaction.model';
 import mongoose from 'mongoose';
 
 const sendMoney = async (
@@ -86,22 +91,20 @@ const sendMoney = async (
 };
 
 const cashOut = async (
-  cashOutData: ITransactionProps
-): Promise<ITransaction | null> => {
-  const { id: senderId, number, amount: sendAmount, pin } = cashOutData;
-
-  const amount = Number(sendAmount);
-
+  cashOutData: ICashOutProps
+): Promise<ICashout | null> => {
+  const { userId, agentNumber, amount, userPin } = cashOutData;
+  const cashoutAmount = Number(amount);
+  
   try {
-    // Find the user initiating the cash-out
-    const user = await User.findById(senderId);
+    const user = await User.findById(userId);
     const admin = await User.findOne({ account_type: 'admin' });
     const agent = await User.findOne({
-      number: number,
+      number: agentNumber,
       authorized: true,
     });
     //@ts-ignore
-    const isPinExist = await User.isPinMatched(pin, user?.pin);
+    const isPinExist = await User.isPinMatched(userPin, user?.pin);
 
     if (!isPinExist) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Wrong Pin');
@@ -120,16 +123,16 @@ const cashOut = async (
 
     // Validate the cash-out amount
     const minAmount = 0;
-    if (amount <= minAmount) {
+    if (cashoutAmount <= minAmount) {
       throw new ApiError(httpStatus.NOT_ACCEPTABLE, `Invalid cash-out amount`);
     }
 
     // Calculate the cash-out fee (1.5%)
-    const cashOutFee = amount * 0.015;
+    const cashOutFee = cashoutAmount * 0.015;
 
     // Update balances
     //@ts-ignore
-    user.balance -= amount + cashOutFee;
+    user.balance -= cashoutAmount + cashOutFee;
     //@ts-ignore
     admin.balance += cashOutFee * 0.5;
     //@ts-ignore
@@ -141,11 +144,12 @@ const cashOut = async (
 
     // Save the updated user, admin, and agent details
     await Promise.all([user.save(), admin.save(), agent.save()]);
-    // Create transaction record
-    const transaction = await Transaction.create({
-      sender: new mongoose.Types.ObjectId(senderId),
-      receiver: new mongoose.Types.ObjectId(agent._id),
-      amount: -amount,
+
+    const transaction = await Cashout.create({
+      userId: new mongoose.Types.ObjectId(userId),
+      agentId: new mongoose.Types.ObjectId(agent._id),
+      amount: cashoutAmount,
+      cashoutNumber: parseInt(user.number),
       fee: cashOutFee,
       type: 'cashOut',
       status: 'success',
@@ -164,7 +168,13 @@ const cashIn = async (
 ): Promise<ITransaction | null> => {
   const { number: userNumber, id: agentId, amount, pin: agentPin } = cashInData;
 
-  console.log(userNumber, agentId, amount,agentPin,"userNumber, agentId, amount,agentPin" );
+  console.log(
+    userNumber,
+    agentId,
+    amount,
+    agentPin,
+    'userNumber, agentId, amount,agentPin'
+  );
   try {
     const user = await User.findOne({ number: userNumber });
     const agent = await User.findOne({
